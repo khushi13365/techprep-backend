@@ -12,29 +12,60 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Atlas Connected Successfully!"))
   .catch((err) => console.log("❌ MongoDB Connection Failed:", err));
 
-// 1. Database Schema (Yeh define karega ki data kaisa dikhega)
+// Database Schema
 const quizSchema = new mongoose.Schema({
   userName: String,
   email: String,
   score: Number,
   totalQuestions: Number,
-  submittedCode: String, // Split-screen IDE se aane wala code
+  submittedCode: String, 
   date: { type: Date, default: Date.now }
-}, { strict: false }); // strict: false allows extra fields just in case
+}, { strict: false }); 
 
 const QuizResult = mongoose.model('QuizResult', quizSchema);
 
-// 2. API Route (Frontend yahan data bhejega)
+// ROUTE 1: Original Save Route
 app.post('/api/save-result', async (req, res) => {
   try {
     const newResult = new QuizResult(req.body);
     await newResult.save();
-    console.log("New quiz data saved:", req.body);
-    res.status(201).json({ message: "Data successfully saved to MongoDB Atlas!" });
+    res.status(201).json({ message: "Data successfully saved!" });
   } catch (err) {
-    console.error("Error saving data:", err);
     res.status(500).json({ error: "Failed to save data" });
   }
+});
+
+// ROUTE 2: Missing Route (Save Challenge)
+app.post('/api/quizzes/results', async (req, res) => {
+  try {
+    const newResult = new QuizResult(req.body);
+    await newResult.save();
+    res.status(201).json({ message: "Challenge Result Saved!" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to save challenge data" });
+  }
+});
+
+// ROUTE 3: Missing Route (Fetch User Data)
+app.get('/api/quizzes/results/user/:email', async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+    const results = await QuizResult.find({ 
+      $or: [{ email: userEmail }, { studentEmail: userEmail }] 
+    });
+    res.status(200).json(results);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch user data" });
+  }
+});
+
+// ROUTE 4: Missing Route (DSA Code Runner Mock)
+app.post('/api/dsa/run', (req, res) => {
+  res.status(200).json({ 
+      success: true, 
+      output: "Code execution simulated successfully.",
+      passed: true
+  });
 });
 
 // Test Route
